@@ -1,5 +1,5 @@
 import { test, expect, Browser, BrowserContext, Page } from '@playwright/test';
-const testfilePath = '../Sandbox/test.pdf';
+const testfilePath = '../Playwright/test.pdf';
 
 export class CurveAccount {
     protected accountContext: BrowserContext | null = null;
@@ -24,12 +24,12 @@ export class CurveAccount {
         await this.accountPage.waitForTimeout(250);
         let avaliableDates = this.accountPage.locator(datePath);
         const numAvailableDays = await avaliableDates.count();
-        if(numAvailableDays < 3){
+        if(numAvailableDays < 4){
           await this.accountPage.locator(nextMonthPath).click();
           await this.accountPage.waitForTimeout(250);
           avaliableDates = this.accountPage.locator(datePath);
         }
-        await avaliableDates.nth(2).click();
+        await avaliableDates.nth(3).click();
       }
       else {
         console.error();
@@ -75,6 +75,18 @@ export class CurveAccount {
         await expect(this.accountPage).toHaveURL(/.*stagingcurve\.medullallc\.com*/);
       }
     }
+
+    public async ClearPages():Promise<void> {
+      if (this.accountPage === null) {
+        console.error('Account page is null...');
+      }
+      else {
+        this.accountPage.close();
+      }
+    }
+
+
+    
     
     // public getAccountContext():BrowserContext {
     //     return this.accountContext as BrowserContext;

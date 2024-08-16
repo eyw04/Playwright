@@ -1,7 +1,6 @@
 import { test, expect, Browser, BrowserContext, Page } from '@playwright/test';
 import {CurveAccount} from './CurveAccountClass';
-import exp from 'constants';
-const testfilePath = '../Sandbox/test.pdf';
+const testfilePath = '../Playwright/test.pdf';
 
 export class DataEntryAccount extends CurveAccount {  
 

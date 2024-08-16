@@ -1,6 +1,6 @@
 import { test, expect, Browser, BrowserContext, Page } from '@playwright/test';
 import {CurveAccount} from './CurveAccountClass';
-const testfilePath = '../Sandbox/test.pdf';
+const testfilePath = '../Playwright/test.pdf';
 
 export class ClinicAccount extends CurveAccount {  
 
@@ -16,7 +16,41 @@ export class ClinicAccount extends CurveAccount {
         }
     }
 
-    public async ClinicNewPatient():Promise<void> {
+    // Will need to add ways to verify different types of existing patients
+
+    public async SubmitVerificationRequest(newPatient:boolean):Promise<void> {
+        if (this.accountPage === null) {
+          console.error('Account page is null.');
+        }
+        else {
+            // Form navigation
+            try {
+                await this.newVerificationRequest();   
+            } catch (error) {
+                await this.newVerificationRequest();
+
+            }
+        
+            // Form filling
+            try {
+                await this.requestDetails(newPatient);            // 1) Enter Request Details
+                await this.patientDetails(newPatient);            // 2) Enter Patient Details
+                await this.workingRecommendations();        // 3) Working Recommendations
+                await this.paperworkSubmission();           // 4) Paperwork
+            } catch (error) {
+                await this.accountPage.reload();
+                await this.requestDetails(newPatient);
+                await this.patientDetails(newPatient);
+                await this.workingRecommendations();
+                await this.paperworkSubmission();
+            }
+        }
+    }
+
+
+
+
+    public async ClinicCurrentPatient():Promise<void> {
         if (this.accountPage === null) {
           console.error('Account page is null.');
         }
@@ -31,14 +65,14 @@ export class ClinicAccount extends CurveAccount {
         
             // Form filling
             try {
-                await this.requestDetails();            // 1) Enter Request Details
-                await this.patientDetails();            // 2) Enter Patient Details
+                await this.requestDetails(false);            // 1) Enter Request Details
+                await this.patientDetails(false);            // 2) Enter Patient Details
                 await this.workingRecommendations();    // 3) Working Recommendations
                 await this.paperworkSubmission();       // 4) Paperwork
             } catch (error) {
                 await this.accountPage.reload();
-                await this.requestDetails();
-                await this.patientDetails();
+                await this.requestDetails(false);
+                await this.patientDetails(false);
                 await this.workingRecommendations();
                 await this.paperworkSubmission();
             }
@@ -109,20 +143,26 @@ export class ClinicAccount extends CurveAccount {
             console.error('Account page is null.');
         }
         else{
-            await this.accountPage.reload();
+            await this.accountPage.goto('https://stagingcurve.medullallc.com/');
             await this.accountPage.waitForTimeout(5000);
             await this.accountPage.getByRole('button', { name: 'New verification request' }).click();
             await this.accountPage.waitForTimeout(3000);
         }
     }
-    private async requestDetails():Promise<void> {
+    private async requestDetails(newPatient:boolean):Promise<void> {
         if (this.accountPage === null) {
             console.error('Account page is null.');
         }
         else{
-            await this.accountPage.getByLabel('Patient Type *').locator('span').click();      
+            await this.accountPage.getByLabel('Patient Type *').locator('span').click();
+            // await this.accountPage.locator('form-select-field[label="Patient Type"] > div > mat-form-field > div > div.mat-form-field-flex > div.mat-form-field-infix > mat-select').click();     
             await this.accountPage.waitForTimeout(1000);
-            await this.accountPage.getByRole('option', { name: 'Create New' }).locator('span').click();
+            if(newPatient){
+                await this.accountPage.locator('mat-option.mat-option').nth(0).click(); // New Patient
+            }
+            else{
+                await this.accountPage.locator('mat-option.mat-option').nth(1).click(); // Existing Patient
+            }
             await this.accountPage.waitForTimeout(1000);
             await this.accountPage.getByLabel('Payor Type *').locator('span').click();
             await this.accountPage.waitForTimeout(500);
@@ -138,17 +178,24 @@ export class ClinicAccount extends CurveAccount {
             await this.accountPage.waitForTimeout(1000);
         }
     }
-    private async patientDetails():Promise<void> {
+    private async patientDetails(newPatient:boolean):Promise<void> {
         if (this.accountPage === null) {
             console.error('Account page is null.');
         }
         else{
-            await this.accountPage.getByLabel('First Name *').fill(this.patientFirstName);
-            await this.accountPage.getByLabel('Last Name *', { exact: true }).fill(this.patientLastName);
-            await this.accountPage.getByLabel('Date of Birth *').fill('12/12/1999');
+            if(newPatient){
+                await this.accountPage.getByLabel('First Name *').fill(this.patientFirstName);
+                await this.accountPage.getByLabel('Last Name *', { exact: true }).fill(this.patientLastName);
+                await this.accountPage.getByLabel('Date of Birth *').fill('12/12/1999');
+            }
+            else{
+                await this.accountPage.getByLabel('Search by Last Name, First').fill(this.patientLastName + " " + this.patientFirstName);
+                await this.accountPage.waitForTimeout(2000);
+                await this.accountPage.locator('div[role="listbox"] > mat-option').first().click();
+            }
             // Calendar
             await this.dateSelector('button[aria-label="Open calendar"]', 'button[aria-label="Next month"]', 'button.mat-calendar-body-cell:not(.mat-calendar-body-disabled)');
-            await this.accountPage.waitForTimeout(500);
+            await this.accountPage.waitForTimeout(1000);
             await this.accountPage.locator('div#report-time > mat-form-field > div.mat-form-field-wrapper > div.mat-form-field-flex > div.mat-form-field-infix > mat-select').click();
             await this.accountPage.waitForTimeout(1000);
             await this.accountPage.locator('mat-option.mat-option').nth(0).click();
@@ -208,7 +255,7 @@ export class ClinicAccount extends CurveAccount {
             await this.accountPage.waitForTimeout(3000);
             await this.accountPage.getByRole('textbox', { name: 'Search for Task ID, First' }).fill(this.patientFullName); //use patient name or task ID
             await this.accountPage.getByRole('textbox', { name: 'Search for Task ID, First' }).press('Enter');
-            await this.accountPage.locator('#link').nth(0).click();
+            await this.accountPage.locator('#link').last().click();
             await expect(this.accountPage).toHaveURL(/process=1/);
         }
     }

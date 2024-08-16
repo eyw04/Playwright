@@ -39,11 +39,38 @@ test.describe('End to End tests', () => {
   });
   
   test('test1', async ({}) => {
-    await Clinic.ClinicNewPatient();
-    await RCM.RCMVerification();
+    await Clinic.SubmitVerificationRequest(true);
+    await RCM.RCMVerification(true);
     await Clinic.CarePlan();
     await DataEntry.DataEntry();
   });
+
+  test('test2', async ({}) => {
+    const patient_first_name:string = "testfirstname1"; //let this be the test ID
+    const patient_last_name:string = "20248169386";
+    Clinic.InitializePatient(patient_first_name,patient_last_name);
+    RCM.InitializePatient(patient_first_name,patient_last_name);
+    DataEntry.InitializePatient(patient_first_name,patient_last_name);
+
+    await Clinic.SubmitVerificationRequest(false);
+    await RCM.RCMVerification(false);
+    await Clinic.CarePlan();
+    await DataEntry.DataEntry();
+  });
+
+
+
+  test.afterAll(async({ }) => {
+    var clear1 = Clinic.ClearPages();
+    var clear2 = RCM.ClearPages();
+    var clear3 = DataEntry.ClearPages();
+
+    await clear1;
+    await clear2;
+    await clear3;
+    
+  });
+
 
 }); 
 

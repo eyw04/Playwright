@@ -1,6 +1,6 @@
 import { test, expect, Browser, BrowserContext, Page } from '@playwright/test';
 import {CurveAccount} from './CurveAccountClass';
-const testfilePath = '../Sandbox/test.pdf';
+const testfilePath = '../Playwright/test.pdf';
 
 export class RCMAccount extends CurveAccount {  
 
@@ -21,7 +21,7 @@ export class RCMAccount extends CurveAccount {
     }
 
     // RCM
-    public async RCMVerification():Promise<void> {
+    public async RCMVerification(newPatient:boolean):Promise<void> {
         if (this.accountPage === null || this.accountContext === null) {
             console.error();
         }
@@ -31,7 +31,7 @@ export class RCMAccount extends CurveAccount {
             try {
                 await this.queueNavigationName();
             } catch (error) {
-                await this.accountPage.reload();
+                await this.accountPage.goto('https://stagingcurve.medullallc.com/');
                 await this.queueNavigationName();
             }
 
@@ -75,6 +75,16 @@ export class RCMAccount extends CurveAccount {
                 await this.insuranceVerification();
             }
 
+            if(!newPatient){
+                try {
+                    await this.checkClaimsStatus();
+                } catch (error) {
+                    await this.accountPage.reload();
+                    await this.checkClaimsStatus();
+                }
+                
+            }
+
             // Care Recommendations
             try {
                 await this.CareRecommendations();
@@ -94,15 +104,17 @@ export class RCMAccount extends CurveAccount {
             await this.accountPage.reload();
             await this.accountPage.waitForTimeout(1000);
             await this.accountPage.getByRole('button', { name: 'go to verification queue' }).click();
-            await this.accountPage.waitForTimeout(3000);
             await this.accountPage.getByRole('textbox', { name: 'Search for Task ID, First' }).fill(this.patientFullName);
+            await this.accountPage.waitForTimeout(3000);
             await this.accountPage.waitForTimeout(2000);
             await this.accountPage.getByRole('textbox', { name: 'Search for Task ID, First' }).press('Enter');
             await this.accountPage.waitForTimeout(5000);
-    
-            this.taskID = await this.accountPage.locator('#link').textContent();
+
+            // Newest request from existing patients show up last
+            // Maybe problem if there are too many requests for a single page
+            this.taskID = await this.accountPage.locator('#link').last().textContent();
             console.log(this.taskID);
-            await this.accountPage.locator('#link').nth(0).click();
+            await this.accountPage.locator('#link').last().click();
             await expect(this.accountPage).toHaveURL(/process=1/);
         }
     }
@@ -167,10 +179,7 @@ export class RCMAccount extends CurveAccount {
             console.error('Account page is null.');
         }
         else {
-            await this.accountPage.getByLabel('Reference Number *').fill('12345');
-            await this.accountPage.getByLabel('Name of Insurance Rep *').fill('name');
             await this.accountPage.getByLabel('Select').locator('div').first().click();
-            await this.accountPage.waitForTimeout(1000);
             await this.accountPage.getByText('Self').click();
             await this.accountPage.waitForTimeout(1000);
             await this.accountPage.getByLabel('Insurance Policy/ID Number *').fill('12345');
@@ -178,12 +187,29 @@ export class RCMAccount extends CurveAccount {
             await this.accountPage.getByLabel('Open calendar').click();
             await this.accountPage.locator('button.mat-calendar-body-cell').nth(0).click();
             await this.accountPage.waitForTimeout(1000);
+            await this.accountPage.getByLabel('Reference Number *').fill('12345');
+            await this.accountPage.getByLabel('Name of Insurance Rep *').fill('name');
+            await this.accountPage.waitForTimeout(1000);
             await this.accountPage.getByRole('button', { name: 'save changes save' }).click();
             await this.accountPage.waitForTimeout(3000);
             await this.accountPage.getByRole('button', { name: 'continue arrow_forward' }).click();
             await expect(this.accountPage).toHaveURL(/process=4/);
         }
     }
+    private async checkClaimsStatus():Promise<void>{
+        if (this.accountPage === null) {
+            console.error('Account page is null.');
+        }
+        else {
+            await this.accountPage.locator('.mat-checkbox-inner-container').click();
+            await this.accountPage.waitForTimeout(3000);
+            await this.accountPage.getByRole('button', { name: 'continue arrow_forward' }).click();
+            await expect(this.accountPage).toHaveURL(/process=5/);
+        }
+    }
+
+
+
     private async CareRecommendations():Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
