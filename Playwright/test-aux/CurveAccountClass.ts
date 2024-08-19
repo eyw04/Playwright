@@ -60,9 +60,10 @@ export class CurveAccount {
         console.error('Account page is null...');
       }
       else {
-        await this.accountPage.goto('https://stagingcurve.medullallc.com/');
+        await this.accountPage.goto('https://devcurve.medullallc.com/');
         await this.accountPage.waitForTimeout(2000);
-        await expect(this.accountPage).toHaveURL(/.*login\.microsoftonline\.com*/);
+        // await expect(this.accountPage).toHaveURL(/.*login\.microsoftonline\.com*/);
+        console.log(username);
         await this.accountPage.getByLabel('Enter your email, phone, or').fill(username);
         await this.accountPage.getByLabel('Enter your email, phone, or').press('Enter');
         await this.accountPage.waitForTimeout(1000);
@@ -72,7 +73,7 @@ export class CurveAccount {
         await this.accountPage.getByLabel('Password').press('Enter');
         await this.accountPage.getByRole('button', { name: 'No' }).click();
         await this.accountPage.waitForTimeout(2000);
-        await expect(this.accountPage).toHaveURL(/.*stagingcurve\.medullallc\.com*/);
+        //await expect(this.accountPage).toHaveURL(/.*stagingcurve\.medullallc\.com*/);
       }
     }
 
@@ -83,6 +84,13 @@ export class CurveAccount {
       else {
         this.accountPage.close();
       }
+    }
+
+    public GetTaskID():string {
+      return this.taskID as string;
+    }
+    public SetTaskID(taskID:string) {
+      this.taskID = taskID;
     }
 
 

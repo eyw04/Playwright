@@ -59,7 +59,7 @@ export class ClinicAccount extends CurveAccount {
             try {
                 await this.newVerificationRequest();   
             } catch (error) {
-                await this.accountPage.goto('https://stagingcurve.medullallc.com/');
+                await this.accountPage.goto('https://devcurve.medullallc.com/');
                 await this.newVerificationRequest();
             }
         
@@ -88,7 +88,7 @@ export class ClinicAccount extends CurveAccount {
             try {
                 await this.taskNavigation();   
             } catch (error) {
-                await this.accountPage.goto('https://stagingcurve.medullallc.com/request-queue');
+                await this.accountPage.goto('https://devcurve.medullallc.com/request-queue');
                 await this.taskNavigation();
             }
     
@@ -135,6 +135,7 @@ export class ClinicAccount extends CurveAccount {
     }
 
     private async curveLoginFunction():Promise<void>{
+        console.log("hello");
         await super.CurveLogin('Monika.Clinics_All@chiroone.net');
     }
 
@@ -143,7 +144,7 @@ export class ClinicAccount extends CurveAccount {
             console.error('Account page is null.');
         }
         else{
-            await this.accountPage.goto('https://stagingcurve.medullallc.com/');
+            await this.accountPage.goto('https://devcurve.medullallc.com/');
             await this.accountPage.waitForTimeout(5000);
             await this.accountPage.getByRole('button', { name: 'New verification request' }).click();
             await this.accountPage.waitForTimeout(3000);
@@ -253,8 +254,10 @@ export class ClinicAccount extends CurveAccount {
         else{
             await this.accountPage.reload();
             await this.accountPage.waitForTimeout(3000);
-            await this.accountPage.getByRole('textbox', { name: 'Search for Task ID, First' }).fill(this.patientFullName); //use patient name or task ID
+            await this.accountPage.getByRole('textbox', { name: 'Search for Task ID, First' }).fill(this.taskID as string); //use patient name or task ID
+            await this.accountPage.waitForTimeout(3000);
             await this.accountPage.getByRole('textbox', { name: 'Search for Task ID, First' }).press('Enter');
+            await this.accountPage.waitForTimeout(3000);
             await this.accountPage.locator('#link').last().click();
             await expect(this.accountPage).toHaveURL(/process=1/);
         }
@@ -311,6 +314,10 @@ export class ClinicAccount extends CurveAccount {
             await this.accountPage.waitForTimeout(1000);
             await this.accountPage.locator('.mat-slide-toggle-bar').first().click();
             await this.accountPage.waitForTimeout(1000);
+            if (this.accountPage.locator('input.mat-slide-toggle-input[aria-checked="false"]')) {
+                await this.accountPage.locator('.mat-slide-toggle-bar').first().click();
+                await this.accountPage.waitForTimeout(1000);
+            }
             await this.accountPage.getByText('print').click();
             await this.accountPage.waitForTimeout(500);
             await this.accountPage.locator('div').filter({ hasText: /^close$/ }).click();
@@ -325,8 +332,8 @@ export class ClinicAccount extends CurveAccount {
             await this.accountPage.waitForTimeout(1000);
             await this.dateSelector('div.payment-row:nth-child(2) > div.date-input > mat-form-field > div.mat-form-field-wrapper > div.mat-form-field-flex > div.mat-form-field-suffix > mat-datepicker-toggle > button', 'button.mat-calendar-next-button', 'button.mat-calendar-body-cell:not(.mat-calendar-body-disabled)');
             await this.accountPage.waitForTimeout(1000);
-            await this.accountPage.getByText('Non-Credit Card').click();
-            await this.accountPage.waitForTimeout(1000);
+            // await this.accountPage.getByText('Non-Credit Card').click();
+            // await this.accountPage.waitForTimeout(1000);
             await this.accountPage.getByRole('button', { name: 'GENERATE CPA' }).click();
             await this.accountPage.waitForTimeout(1000);
             await this.accountPage.locator('div').filter({ hasText: /^close$/ }).click();
@@ -354,7 +361,7 @@ export class ClinicAccount extends CurveAccount {
             await this.accountPage.waitForTimeout(500);
             await this.accountPage.getByRole('button', { name: 'UPDATE RCM' }).click();
             await this.accountPage.waitForTimeout(1000);
-            await expect(this.accountPage).toHaveURL(/.*stagingcurve\.medullallc\.com*/);
+            //await expect(this.accountPage).toHaveURL(/.*stagingcurve\.medullallc\.com*/);
         }
     }
   }

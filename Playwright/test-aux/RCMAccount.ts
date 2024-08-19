@@ -31,16 +31,16 @@ export class RCMAccount extends CurveAccount {
             try {
                 await this.queueNavigationName();
             } catch (error) {
-                await this.accountPage.goto('https://stagingcurve.medullallc.com/');
+                await this.accountPage.goto('https://devcurve.medullallc.com/');
                 await this.queueNavigationName();
             }
 
             // Assign Doctor to Patient
             try {
-                await this.assignDoctor();
+                await this.assignDoctor(newPatient);
             } catch (error) {
                 await this.accountPage.reload();
-                await this.assignDoctor();
+                await this.assignDoctor(newPatient);
             }
 
             // Verification Queue Navigation using Task ID
@@ -68,12 +68,24 @@ export class RCMAccount extends CurveAccount {
             }
 
             // Insurance Verification
-            try {
-                await this.insuranceVerification();
-            } catch (error) {
-                await this.accountPage.reload();
-                await this.insuranceVerification();
-            }
+                try {
+                    await this.insuranceVerification();
+                } catch (error) {
+                    await this.accountPage.reload();
+                    await this.insuranceVerification();
+                }
+            // if(newPatient){
+            //     try {
+            //         await this.insuranceVerification();
+            //     } catch (error) {
+            //         await this.accountPage.reload();
+            //         await this.insuranceVerification();
+            //     }
+            // }
+            // else{
+            //     await this.accountPage.getByRole('button', { name: 'continue arrow_forward' }).click();
+            //     await expect(this.accountPage).toHaveURL(/process=4/);
+            // }
 
             if(!newPatient){
                 try {
@@ -131,15 +143,20 @@ export class RCMAccount extends CurveAccount {
             await expect(this.accountPage).toHaveURL(/process=1/);
         }
     }
-    private async assignDoctor():Promise<void>{
+    private async assignDoctor(newPatient:boolean):Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
         }
         else {
             await this.accountPage.getByRole('button', { name: 'Take Action arrow_drop_down' }).click();
             await this.accountPage.getByRole('menuitem', { name: 'Assign' }).click();
-            await this.accountPage.getByText('UnassignedAssigned To *').click();
-            await this.accountPage.locator('span.mat-option-text').nth(0).click();
+            await this.accountPage.locator('div.assigned-to-wrapper > mat-form-field > div > div.mat-form-field-flex > div > mat-select').click();
+            if(newPatient){
+                await this.accountPage.locator('span.mat-option-text').nth(0).click();
+            }
+            else{
+                await this.accountPage.locator('mat-option[aria-disabled="false"]:not([aria-selectwed="true"])').nth(0).click();
+            }
             await this.accountPage.getByRole('button', { name: 'ASSIGN' }).click();
             await this.accountPage.waitForTimeout(3000);
             await expect(this.accountPage).toHaveURL(/request-queue/);
@@ -201,8 +218,14 @@ export class RCMAccount extends CurveAccount {
             console.error('Account page is null.');
         }
         else {
-            await this.accountPage.locator('.mat-checkbox-inner-container').click();
-            await this.accountPage.waitForTimeout(3000);
+            await this.accountPage.locator('.mat-checkbox-inner-container').first().click();
+            await this.accountPage.waitForTimeout(1500);
+            await this.accountPage.locator('mat-checkbox[formcontrolname="claimcheck"]').click();
+            await this.accountPage.waitForTimeout(1500);
+            await this.accountPage.getByRole('textbox').fill('testnote');
+            await this.accountPage.waitForTimeout(1500);
+            await this.accountPage.getByRole('button', { name: 'SEND TO CLAIMS' }).click();
+            await this.accountPage.waitForTimeout(1500);
             await this.accountPage.getByRole('button', { name: 'continue arrow_forward' }).click();
             await expect(this.accountPage).toHaveURL(/process=5/);
         }

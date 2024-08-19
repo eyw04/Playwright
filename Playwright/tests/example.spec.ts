@@ -39,23 +39,29 @@ test.describe('End to End tests', () => {
   });
   
   test('test1', async ({}) => {
+
     await Clinic.SubmitVerificationRequest(true);
     await RCM.RCMVerification(true);
+    Clinic.SetTaskID(RCM.GetTaskID());
     await Clinic.CarePlan();
-    await DataEntry.DataEntry();
+    await DataEntry.DataEntry(true);
+
   });
 
   test('test2', async ({}) => {
+
     const patient_first_name:string = "testfirstname1"; //let this be the test ID
-    const patient_last_name:string = "20248169386";
+    const patient_last_name:string = "202481901838";
     Clinic.InitializePatient(patient_first_name,patient_last_name);
     RCM.InitializePatient(patient_first_name,patient_last_name);
     DataEntry.InitializePatient(patient_first_name,patient_last_name);
 
     await Clinic.SubmitVerificationRequest(false);
     await RCM.RCMVerification(false);
+    Clinic.SetTaskID(RCM.GetTaskID());
     await Clinic.CarePlan();
-    await DataEntry.DataEntry();
+    await DataEntry.DataEntry(false);
+
   });
 
 
