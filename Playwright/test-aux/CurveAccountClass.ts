@@ -46,7 +46,7 @@ export class CurveAccount {
         await this.accountPage.waitForTimeout(1000);
         await expect(this.accountPage).toHaveURL(/.*medulla\.okta\.com*/);
         await this.accountPage.getByRole('button', { name: 'Next' }).click();
-        await this.accountPage.getByLabel('Password').fill('Welcome4$'); // Update if password changes
+        await this.accountPage.getByLabel('Password').fill(''); // Update if password changes
         await this.accountPage.getByLabel('Password').press('Enter');
         await this.accountPage.getByRole('button', { name: 'No' }).click();
         await this.accountPage.waitForTimeout(2000);
