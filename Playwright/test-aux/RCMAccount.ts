@@ -2,32 +2,33 @@ import { test, expect, Browser, BrowserContext, Page } from '@playwright/test';
 import {CurveAccount} from './CurveAccountClass';
 const testfilePath = '../Playwright/test.pdf';
 
+
+// Class for the RCM account
 export class RCMAccount extends CurveAccount {  
 
+    // Contructor calls parent constructor, which also does nothing
     constructor() {
         super();
     }
   
+    // Logs into Curve as RCM Manager
+    // Calls the parent CurveLogin function
     public async CurveLogin():Promise<void> {
         try {
-            await this.curveLoginFunction();
+            await super.CurveLogin('RCTMgr1@chiroone.net');
         } catch (error) {
-            await this.curveLoginFunction();
+            await super.CurveLogin('RCTMgr1@chiroone.net');
         }
     }
 
-    private async curveLoginFunction():Promise<void>{
-        await super.CurveLogin('RCTMgr1@chiroone.net');
-    }
-
-    // RCM
+    // Second step in Curve workflow
     public async RCMVerification(newPatient:boolean):Promise<void> {
         if (this.accountPage === null || this.accountContext === null) {
             console.error();
         }
         else{
 
-            // Verification Queue Navigation using Patient Name
+            // 1) Verification Queue Navigation using Patient Name
             try {
                 await this.queueNavigationName();
             } catch (error) {
@@ -35,7 +36,7 @@ export class RCMAccount extends CurveAccount {
                 await this.queueNavigationName();
             }
 
-            // Assign Doctor to Patient
+            // 2) Assign Doctor to Patient
             try {
                 await this.assignDoctor(newPatient);
             } catch (error) {
@@ -43,7 +44,7 @@ export class RCMAccount extends CurveAccount {
                 await this.assignDoctor(newPatient);
             }
 
-            // Verification Queue Navigation using Task ID
+            // 3) Verification Queue Navigation using Task ID
             try {
                 await this.queueNavigationID();
             } catch (error) {
@@ -51,7 +52,7 @@ export class RCMAccount extends CurveAccount {
                 await this.queueNavigationID();
             }
 
-            // Review Request
+            // 4) Review Request
             try {
                 await this.reviewRequest();
             } catch (error) {
@@ -59,7 +60,7 @@ export class RCMAccount extends CurveAccount {
                 await this.reviewRequest();
             }
 
-            // Select IV Template
+            // 5) Select IV Template
             try {
                 await this.selectIVTemplate();
             } catch (error) {
@@ -67,26 +68,15 @@ export class RCMAccount extends CurveAccount {
                 await this.selectIVTemplate();
             }
 
-            // Insurance Verification
-                try {
-                    await this.insuranceVerification();
-                } catch (error) {
-                    await this.accountPage.reload();
-                    await this.insuranceVerification();
-                }
-            // if(newPatient){
-            //     try {
-            //         await this.insuranceVerification();
-            //     } catch (error) {
-            //         await this.accountPage.reload();
-            //         await this.insuranceVerification();
-            //     }
-            // }
-            // else{
-            //     await this.accountPage.getByRole('button', { name: 'continue arrow_forward' }).click();
-            //     await expect(this.accountPage).toHaveURL(/process=4/);
-            // }
+            // 6) Insurance Verification
+            try {
+                await this.insuranceVerification();
+            } catch (error) {
+                await this.accountPage.reload();
+                await this.insuranceVerification();
+            }
 
+            // 6a) Existing patients will have a "check claims status" page
             if(!newPatient){
                 try {
                     await this.checkClaimsStatus();
@@ -94,10 +84,9 @@ export class RCMAccount extends CurveAccount {
                     await this.accountPage.reload();
                     await this.checkClaimsStatus();
                 }
-                
             }
 
-            // Care Recommendations
+            // 7) Care Recommendations
             try {
                 await this.CareRecommendations();
             } catch (error) {
@@ -107,7 +96,7 @@ export class RCMAccount extends CurveAccount {
         }
     }
     
-    
+    // 1st step of RCM verification
     private async queueNavigationName():Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
@@ -131,6 +120,7 @@ export class RCMAccount extends CurveAccount {
         }
     }
 
+    // 2nd step of RCM verification
     private async queueNavigationID():Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
@@ -143,6 +133,8 @@ export class RCMAccount extends CurveAccount {
             await expect(this.accountPage).toHaveURL(/process=1/);
         }
     }
+
+    // 3rd step of RCM verification
     private async assignDoctor(newPatient:boolean):Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
@@ -162,6 +154,8 @@ export class RCMAccount extends CurveAccount {
             await expect(this.accountPage).toHaveURL(/request-queue/);
         }
     }
+
+    // 4th step of RCM verification
     private async reviewRequest():Promise<void>{
         if (this.accountPage === null || this.accountContext === null) {
             console.error('Account page is null.');
@@ -177,6 +171,8 @@ export class RCMAccount extends CurveAccount {
             await expect(this.accountPage).toHaveURL(/process=2/);
         }
     }
+
+    // 5th step of RCM verification
     private async selectIVTemplate():Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
@@ -191,11 +187,14 @@ export class RCMAccount extends CurveAccount {
             await expect(this.accountPage).toHaveURL(/process=3/);
         }
     }
+
+    // 6th step of RCM verification
     private async insuranceVerification():Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
         }
         else {
+            // Note: sometimes selecting self clears the page > this needs to be done first
             await this.accountPage.getByLabel('Select').locator('div').first().click();
             await this.accountPage.getByText('Self').click();
             await this.accountPage.waitForTimeout(1000);
@@ -213,6 +212,8 @@ export class RCMAccount extends CurveAccount {
             await expect(this.accountPage).toHaveURL(/process=4/);
         }
     }
+
+    // 6a-th step of RCM verification
     private async checkClaimsStatus():Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
@@ -232,7 +233,7 @@ export class RCMAccount extends CurveAccount {
     }
 
 
-
+    // 7th step of RCM verification
     private async CareRecommendations():Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');

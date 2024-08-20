@@ -10,22 +10,19 @@ export class DataEntryAccount extends CurveAccount {
   
     public async CurveLogin():Promise<void> {
         try {
-            await this.curveLoginFunction();
+            await super.CurveLogin('Matt.Data@chiroone.net');
         } catch (error) {
-            await this.curveLoginFunction();
+            await super.CurveLogin('Matt.Data@chiroone.net');
         }
     }
 
-    private async curveLoginFunction():Promise<void>{
-        await super.CurveLogin('Matt.Data@chiroone.net');
-    }
-
+    // Fourth step in Curve workflow
     public async DataEntry(newPatient:boolean):Promise<void> {
         if(this.accountPage === null) {
           console.error();
         }
         else{
-            // Navigating the Queue
+            // 1) Navigating the Queue
             try {
                 await this.queueNavigation();
             } catch (error) {
@@ -33,7 +30,7 @@ export class DataEntryAccount extends CurveAccount {
                 await this.queueNavigation();
             }
 
-            // Review Request 
+            // 2) Review Request 
             try {
                 await this.reviewRequest();
             } catch (error) {
@@ -41,7 +38,7 @@ export class DataEntryAccount extends CurveAccount {
                 await this.reviewRequest();
             }
 
-            // Platinum Entry
+            // 3) Platinum Entry
             try {
                 await this.platinumEntry();
             } catch (error) {
@@ -49,7 +46,7 @@ export class DataEntryAccount extends CurveAccount {
                 await this.platinumEntry();
             }
 
-            // Ledger Check
+            // 4) Ledger Check
             try {
                 await this.ledgerCheck(newPatient);
             } catch (error) {
@@ -57,11 +54,12 @@ export class DataEntryAccount extends CurveAccount {
                 await this.ledgerCheck(newPatient);
             }
 
+            // 4a) Existing Patients do not have additional services check
             if(!newPatient){
                 return;
             }
 
-            // Additional Services Check
+            // 5) Additional Services Check
             try {
                 await this.addServicesCheck();
             } catch (error) {
@@ -71,6 +69,7 @@ export class DataEntryAccount extends CurveAccount {
         }
       }
     
+    // 1st step of data entry
     private async queueNavigation():Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
@@ -87,6 +86,7 @@ export class DataEntryAccount extends CurveAccount {
         }
     }
 
+    // 2nd step of data entry
     private async reviewRequest():Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
@@ -98,6 +98,7 @@ export class DataEntryAccount extends CurveAccount {
         }
     }
 
+    // 3rd step of data entry
     private async platinumEntry():Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
@@ -111,6 +112,7 @@ export class DataEntryAccount extends CurveAccount {
         }
     }
 
+    // 4th step of data entry
     private async ledgerCheck(newPatient:boolean):Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
@@ -125,6 +127,7 @@ export class DataEntryAccount extends CurveAccount {
             }
             else{
                 await this.accountPage.waitForTimeout(3000);
+                // There are different types of ledger checks, this if statement captures both types
                 if(this.accountPage.locator('li.row:nth-child(1) > div.prompt-checkbox-grouping > div.checkbox:nth-child(2) > mat-checkbox')){
                     await this.accountPage.locator('li.row:nth-child(1) > div.prompt-checkbox-grouping > div.checkbox:nth-child(2) > mat-checkbox').click();
                     await this.accountPage.waitForTimeout(500);
@@ -146,6 +149,7 @@ export class DataEntryAccount extends CurveAccount {
         }
     }
 
+    // 5th step of data entry
     private async addServicesCheck():Promise<void>{
         if (this.accountPage === null) {
             console.error('Account page is null.');
